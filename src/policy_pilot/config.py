@@ -15,7 +15,9 @@ EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "BAAI/bge-m3")
 EEMBEDDING_DIM = 1024
 
 LLM_MODEL = os.getenv("LLM_MODEL", "gpt-5.4-mini")
-MIN_SIMILARITY = float(os.getenv("MIN_SIMILARITY", "0.5"))
+# Chosen with eval/golden_set.yaml: 0.30 passes all answerable questions.
+# Scores of answerable and unanswerable questions overlap, so the LLM makes the final call.
+MIN_SIMILARITY = float(os.getenv("MIN_SIMILARITY", "0.3"))
 
 
 def db_params() -> dict:
