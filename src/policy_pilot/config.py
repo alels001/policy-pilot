@@ -12,7 +12,10 @@ SCHEMA_FILE = Path(os.getenv("SCHEMA_FILE", "db/schema.sql"))
 
 # Multilingual retrieval model: strong on German and English, runs locally, MIT license.
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "BAAI/bge-m3")
-EMBEDDING_DIM = 1024
+EEMBEDDING_DIM = 1024
+
+LLM_MODEL = os.getenv("LLM_MODEL", "gpt-5.4-mini")
+MIN_SIMILARITY = float(os.getenv("MIN_SIMILARITY", "0.5"))
 
 
 def db_params() -> dict:
