@@ -1,0 +1,167 @@
+# Document catalog for PolicyPilot
+# Simulates the export of a document management system (e.g. SharePoint):
+# which documents exist, which version is current, and who may read them.
+# Access rights live HERE, not inside the document text.
+
+roles:
+  - employee
+  - hr_specialist
+  - it_admin
+  - quality_engineer
+
+documents:
+  - doc_id: HR-001
+    title: Urlaubsrichtlinie 2026
+    path: raw/hr/urlaubsrichtlinie_2026.md
+    department: hr
+    classification: internal
+    allowed_roles: [employee, hr_specialist, it_admin, quality_engineer]
+    version: "2026"
+    valid_from: 2026-01-01
+    status: current
+    language: de
+    owner: HR
+
+  - doc_id: HR-001
+    title: Urlaubsrichtlinie 2025
+    path: raw/hr/urlaubsrichtlinie_2025.md
+    department: hr
+    classification: internal
+    allowed_roles: [employee, hr_specialist, it_admin, quality_engineer]
+    version: "2025"
+    valid_from: 2025-01-01
+    status: superseded
+    language: de
+    owner: HR
+
+  - doc_id: HR-002
+    title: Travel and Expense Policy
+    path: raw/hr/travel_expense_policy.md
+    department: hr
+    classification: internal
+    allowed_roles: [employee, hr_specialist, it_admin, quality_engineer]
+    version: "4.1"
+    valid_from: 2026-03-01
+    status: current
+    language: en
+    owner: HR / Finance
+
+  - doc_id: HR-003
+    title: Richtlinie Mobiles Arbeiten
+    path: raw/hr/mobiles_arbeiten.md
+    department: hr
+    classification: internal
+    allowed_roles: [employee, hr_specialist, it_admin, quality_engineer]
+    version: "2.0"
+    valid_from: 2025-07-01
+    status: current
+    language: de
+    owner: HR
+
+  - doc_id: HR-010
+    title: Gehaltsbänder 2026
+    path: raw/hr/gehaltsbaender_2026.md
+    department: hr
+    classification: confidential
+    allowed_roles: [hr_specialist]
+    version: "2026"
+    valid_from: 2026-01-01
+    status: current
+    language: de
+    owner: HR Compensation & Benefits
+
+  - doc_id: IT-001
+    title: IT FAQ for Employees
+    path: raw/it/it_faq.md
+    department: it
+    classification: internal
+    allowed_roles: [employee, hr_specialist, it_admin, quality_engineer]
+    version: "2026.2"
+    valid_from: 2026-05-01
+    status: current
+    language: en
+    owner: IT Service Desk
+
+  - doc_id: IT-002
+    title: Phishing erkennen und melden
+    path: raw/it/phishing_melden.md
+    department: it
+    classification: internal
+    allowed_roles: [employee, hr_specialist, it_admin, quality_engineer]
+    version: "1.3"
+    valid_from: 2026-02-15
+    status: current
+    language: de
+    owner: IT Security
+
+  - doc_id: IT-003
+    title: VPN Setup Guide
+    path: raw/it/vpn_setup_guide.md
+    department: it
+    classification: internal
+    allowed_roles: [employee, hr_specialist, it_admin, quality_engineer]
+    version: "3.0"
+    valid_from: 2026-01-15
+    status: current
+    language: en
+    owner: IT Infrastructure
+
+  - doc_id: IT-010
+    title: Security Incident Response Runbook
+    path: raw/it/incident_response_runbook.md
+    department: it
+    classification: confidential
+    allowed_roles: [it_admin]
+    version: "2.2"
+    valid_from: 2026-04-01
+    status: current
+    language: en
+    owner: IT Security
+
+  - doc_id: QM-014
+    title: Arbeitsanweisung Wareneingangsprüfung
+    path: raw/quality/arbeitsanweisung_wareneingangspruefung.md
+    department: quality
+    classification: internal
+    allowed_roles: [employee, hr_specialist, it_admin, quality_engineer]
+    version: "5"
+    valid_from: 2026-02-01
+    status: current
+    language: de
+    owner: Quality Management
+
+  - doc_id: QM-007
+    title: Procedure Nonconforming Parts (8D)
+    path: raw/quality/nonconforming_parts_8d.md
+    department: quality
+    classification: internal
+    allowed_roles: [employee, hr_specialist, it_admin, quality_engineer]
+    version: "3.2"
+    valid_from: 2025-11-01
+    status: current
+    language: en
+    owner: Quality Management
+
+  - doc_id: QM-030
+    title: Bericht internes Systemaudit IATF 16949 (2026)
+    path: raw/quality/internes_audit_iatf_2026.md
+    department: quality
+    classification: confidential
+    allowed_roles: [quality_engineer]
+    version: "2026-09"
+    valid_from: 2026-09-16
+    status: current
+    language: de
+    owner: Quality Management
+
+  - doc_id: CO-001
+    title: Code of Conduct
+    path: raw/compliance/code_of_conduct.md
+    department: compliance
+    classification: internal
+    allowed_roles: [employee, hr_specialist, it_admin, quality_engineer]
+    version: "2026"
+    valid_from: 2026-01-01
+    status: current
+    language: en
+    owner: Compliance
