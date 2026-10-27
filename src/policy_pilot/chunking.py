@@ -11,6 +11,7 @@ class Chunk:
     section: str
     text: str
 
+
 def split_markdown(markdown: str) -> list[Chunk]:
     sections: list[tuple[str, list[str]]] = []
     heading = DOCUMENT_INFO
@@ -32,7 +33,8 @@ def split_markdown(markdown: str) -> list[Chunk]:
         text = "\n".join(lines).strip()
         if text:
             chunks.extend(Chunk(heading, part) for part in _split_long(text))
-    return chunks    
+    return chunks
+
 
 def _split_long(text: str, max_chars: int = MAX_CHARS) -> list[str]:
     """Very long sections are split at paragraph boundaries, never in the middle of a sentence."""

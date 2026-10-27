@@ -19,6 +19,8 @@ INSERT INTO chunks (
     %(department)s, %(classification)s, %(allowed_roles)s, %(source_path)s, %(embedding)s
 )
 """
+
+
 def build_rows(documents: list[Document]) -> list[dict]:
     rows = []
     for doc in documents:
@@ -41,11 +43,14 @@ def build_rows(documents: list[Document]) -> list[dict]:
             )
     return rows
 
+
 def main() -> None:
     documents = load_catalog(config.DATA_DIR)
     current = current_documents(documents)
-    print(f"Catalog: {len(documents)} documents, {len(current)} current, "
-          f"{len(documents) - len(current)} superseded (skipped)")
+    print(
+        f"Catalog: {len(documents)} documents, {len(current)} current, "
+        f"{len(documents) - len(current)} superseded (skipped)"
+    )
 
     rows = build_rows(current)
     print(f"Chunks: {len(rows)}")
