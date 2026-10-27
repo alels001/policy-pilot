@@ -1,0 +1,24 @@
+# Demo users for PolicyPilot (fictional).
+# In production, the role would come from the identity provider (e.g. Entra ID groups),
+# never from what the user types.
+
+users:
+  - user_id: u-anna
+    name: Anna Becker
+    department: Production Planning
+    role: employee
+
+  - user_id: u-jonas
+    name: Jonas Weber
+    department: Human Resources
+    role: hr_specialist
+
+  - user_id: u-lea
+    name: Lea Hoffmann
+    department: IT
+    role: it_admin
+
+  - user_id: u-murat
+    name: Murat Yilmaz
+    department: Quality Management
+    role: quality_engineer
