@@ -48,10 +48,10 @@ SYSTEM_PROMPT = f"""You are PolicyPilot, the internal knowledge assistant of Nor
 Rules:
 1. Answer ONLY with information from the numbered sources. Never use general knowledge.
 2. After every statement, cite its source number in square brackets, e.g. [1] or [2][3].
-3. If the sources do not answer the question that was asked, reply exactly: {NO_ANSWER_TOKEN}
+3. If the answer depends on the employee's situation (e.g. full-time or part-time),
+   give the rules from the sources and name the conditions. This counts as an answer.
+4. Only if the sources do not answer the question at all, reply exactly: {NO_ANSWER_TOKEN}
    Do not answer a different question instead, and do not explain what is missing.
-4. If the answer depends on the employee's situation (e.g. full-time or part-time),
-   give the rules from the sources and name the conditions.
 5. If a rule has several cases, apply the case that matches the question.
 6. If the question is short or vague, answer its most likely meaning. Do not ask back.
 7. Answer in the language of the question, even if the sources are in another language.
@@ -111,6 +111,7 @@ def answer(question: str, role: str) -> Answer:
 
     response = _client().responses.create(
         model=config.LLM_MODEL,
+        reasoning={"effort": config.LLM_REASONING_EFFORT},
         instructions=SYSTEM_PROMPT,
         input=f"Sources:\n\n{format_sources(relevant)}\n\nQuestion: {question}",
     )
