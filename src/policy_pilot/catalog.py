@@ -48,6 +48,7 @@ def load_catalog(data_dir: Path) -> list[Document]:
         )
     return documents
 
+
 def current_documents(documents: list[Document]) -> list[Document]:
     """Only current versions are indexed. Superseded versions never reach the search."""
     return [doc for doc in documents if doc.status == "current"]

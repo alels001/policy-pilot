@@ -12,10 +12,52 @@ CANDIDATES = 20
 RRF_K = 60
 
 STOPWORDS = {
-    "the", "and", "for", "what", "how", "many", "much", "can", "do", "does", "is", "are",
-    "i", "my", "a", "an", "of", "to", "in", "on", "with", "get", "should", "must",
-    "der", "die", "das", "und", "ich", "wie", "was", "viele", "habe", "ist", "sind",
-    "ein", "eine", "für", "mit", "zu", "auf", "im", "in", "den", "dem", "des", "wo",
+    "the",
+    "and",
+    "for",
+    "what",
+    "how",
+    "many",
+    "much",
+    "can",
+    "do",
+    "does",
+    "is",
+    "are",
+    "i",
+    "my",
+    "a",
+    "an",
+    "of",
+    "to",
+    "in",
+    "on",
+    "with",
+    "get",
+    "should",
+    "must",
+    "der",
+    "die",
+    "das",
+    "und",
+    "ich",
+    "wie",
+    "was",
+    "viele",
+    "habe",
+    "ist",
+    "sind",
+    "ein",
+    "eine",
+    "für",
+    "mit",
+    "zu",
+    "auf",
+    "im",
+    "den",
+    "dem",
+    "des",
+    "wo",
 }
 
 
@@ -28,6 +70,7 @@ class SearchResult:
     content: str
     similarity: float
     score: float
+
 
 SEARCH_SQL = """
 WITH vector_hits AS (
@@ -61,7 +104,8 @@ FROM fused AS f
 JOIN chunks AS c ON c.id = f.id
 ORDER BY f.score DESC
 LIMIT %(top_k)s
-"""    
+"""
+
 
 def keyword_query(question: str) -> str:
     """Turn a question into an OR keyword query: 'IATF Audit?' -> 'iatf | audit'."""
