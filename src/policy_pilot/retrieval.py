@@ -10,6 +10,7 @@ from policy_pilot.embeddings import embed_query
 TOP_K = 5
 CANDIDATES = 20
 RRF_K = 60
+KEYWORD_WEIGHT = 0.5  # keywords only match in the same language, so they count half
 
 STOPWORDS = {
     "the",
@@ -89,11 +90,11 @@ keyword_hits AS (
     LIMIT %(candidates)s
 ),
 fused AS (
-    SELECT id, sum(1.0 / (%(rrf_k)s + rank)) AS score
+    SELECT id, sum(weight / (%(rrf_k)s + rank)) AS score
     FROM (
-        SELECT id, rank FROM vector_hits
+        SELECT id, rank, 1.0 AS weight FROM vector_hits
         UNION ALL
-        SELECT id, rank FROM keyword_hits
+        SELECT id, rank, %(keyword_weight)s AS weight FROM keyword_hits
     ) AS hits
     GROUP BY id
 )
@@ -121,6 +122,7 @@ def search(question: str, role: str, top_k: int = TOP_K) -> list[SearchResult]:
         "role": role,
         "candidates": CANDIDATES,
         "rrf_k": RRF_K,
+        "keyword_weight": KEYWORD_WEIGHT,
         "top_k": top_k,
     }
     with connect() as conn:
