@@ -62,7 +62,9 @@ def access_summary(role: str) -> list[tuple[str, int, int]]:
     """Per department: number of documents the role may see, and how many are confidential."""
     visible = [doc for doc in catalog() if role in doc.allowed_roles]
     total = Counter(doc.department for doc in visible)
-    confidential = Counter(doc.department for doc in visible if doc.classification == "confidential")
+    confidential = Counter(
+        doc.department for doc in visible if doc.classification == "confidential"
+    )
     return [(DEPARTMENTS[d], total[d], confidential[d]) for d in DEPARTMENTS if total[d]]
 
 

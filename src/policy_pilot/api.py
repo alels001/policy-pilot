@@ -75,7 +75,6 @@ def me(user: Annotated[CurrentUser, Depends(current_user)]) -> CurrentUser:
     return user
 
 
-
 @app.post("/ask")
 def ask(request: AskRequest, user: Annotated[CurrentUser, Depends(current_user)]) -> AskResponse:
     """Answer a question for the signed-in user. The role comes from the token."""

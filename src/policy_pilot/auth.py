@@ -26,6 +26,7 @@ class CurrentUser:
     name: str
     role: str
 
+
 def find_user(user_id: str) -> User | None:
     return next((u for u in load_users(config.DATA_DIR) if u.user_id == user_id), None)
 
@@ -47,6 +48,8 @@ def create_token(user: User) -> str:
         "exp": now + timedelta(minutes=config.JWT_EXPIRE_MINUTES),
     }
     return jwt.encode(payload, config.jwt_secret(), algorithm=ALGORITHM)
+
+
 def current_user(
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(bearer)],
 ) -> CurrentUser:
