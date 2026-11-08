@@ -43,3 +43,7 @@ def jwt_secret() -> str:
 def demo_password() -> str:
     """Shared password of the demo users. In production, users sign in via the company SSO."""
     return os.environ["DEMO_PASSWORD"]
+
+
+# Where the chat UI finds the API.
+API_URL = os.getenv("API_URL", "http://localhost:8000")

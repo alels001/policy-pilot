@@ -4,6 +4,8 @@ Run from the project root:
     uv run uvicorn policy_pilot.api:app --reload
 """
 
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, status
@@ -11,10 +13,19 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from policy_pilot import config
 from policy_pilot.auth import CurrentUser, authenticate, create_token, current_user
+from policy_pilot.catalog import current_documents, load_catalog
 from policy_pilot.db import connect
+from policy_pilot.embeddings import embed_query
 from policy_pilot.generation import answer
 
-app = FastAPI(title="PolicyPilot API", version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    embed_query("warm up")  # load the embedding model at startup, not on the first question
+    yield
+
+
+app = FastAPI(title="PolicyPilot API", version="0.1.0", lifespan=lifespan)
 
 
 class LoginRequest(BaseModel):
@@ -49,6 +60,12 @@ class AskResponse(BaseModel):
     sources: list[Source]
 
 
+class DepartmentAccess(BaseModel):
+    department: str
+    documents: int
+    confidential: int
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     """Liveness check: the API runs and can reach the database."""
@@ -73,6 +90,25 @@ def login(request: LoginRequest) -> TokenResponse:
 def me(user: Annotated[CurrentUser, Depends(current_user)]) -> CurrentUser:
     """Who am I? Shows what the API reads from the token."""
     return user
+
+
+@app.get("/access")
+def access(user: Annotated[CurrentUser, Depends(current_user)]) -> list[DepartmentAccess]:
+    """How many documents per department the signed-in user may see. Counts only, no titles."""
+    documents = current_documents(load_catalog(config.DATA_DIR))
+    visible = [doc for doc in documents if user.role in doc.allowed_roles]
+    departments = dict.fromkeys(doc.department for doc in visible)
+    return [
+        DepartmentAccess(
+            department=department,
+            documents=sum(doc.department == department for doc in visible),
+            confidential=sum(
+                doc.department == department and doc.classification == "confidential"
+                for doc in visible
+            ),
+        )
+        for department in departments
+    ]
 
 
 @app.post("/ask")

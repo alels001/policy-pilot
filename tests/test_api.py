@@ -114,3 +114,15 @@ def test_expired_token_is_rejected(client, roles_asked):
     response = client.get("/me", headers={"Authorization": f"Bearer {expired}"})
     assert response.status_code == 401
     assert response.json()["detail"] == "Token expired"
+
+
+def test_access_shows_no_confidential_documents_for_employees(client):
+    response = client.get("/access", headers=auth_header(client, "u-anna"))
+    assert response.status_code == 200
+    assert all(item["confidential"] == 0 for item in response.json())
+
+
+def test_access_shows_confidential_hr_documents_for_hr(client):
+    response = client.get("/access", headers=auth_header(client, "u-jonas"))
+    hr = next(item for item in response.json() if item["department"] == "hr")
+    assert hr["confidential"] == 1
