@@ -1,18 +1,14 @@
-"""PolicyPilot chat UI.
+"""PolicyPilot chat UI. It talks only to the API and never decides roles itself.
 
-Run from the project root:
+Run from the project root, with the API running:
     uv run streamlit run src/policy_pilot/app.py
 """
 
 import time
-from collections import Counter
 
 import streamlit as st
 
-from policy_pilot import config
-from policy_pilot.catalog import current_documents, load_catalog
-from policy_pilot.embeddings import embed_query
-from policy_pilot.generation import answer
+from policy_pilot import client, config
 from policy_pilot.users import load_users
 
 st.set_page_config(page_title="PolicyPilot", page_icon="🧭", layout="centered")
@@ -47,36 +43,15 @@ EXAMPLES = {
 }
 
 
-@st.cache_resource
-def warm_up() -> bool:
-    embed_query("warm up")  # load the embedding model once, not on the first question
-    return True
-
-
-@st.cache_data
-def catalog():
-    return current_documents(load_catalog(config.DATA_DIR))
-
-
-def access_summary(role: str) -> list[tuple[str, int, int]]:
-    """Per department: number of documents the role may see, and how many are confidential."""
-    visible = [doc for doc in catalog() if role in doc.allowed_roles]
-    total = Counter(doc.department for doc in visible)
-    confidential = Counter(
-        doc.department for doc in visible if doc.classification == "confidential"
-    )
-    return [(DEPARTMENTS[d], total[d], confidential[d]) for d in DEPARTMENTS if total[d]]
-
-
-def show_sources(sources) -> None:
+def show_sources(sources: list[dict]) -> None:
     if not sources:
         return
     with st.expander(f"Sources ({len(sources)})", icon=":material/description:"):
-        for number, source in enumerate(sources, start=1):
-            st.markdown(f"**[{number}] {source.title}**")
-            st.caption(f"{source.doc_id} · Version {source.version} · {source.section}")
-            st.markdown(source.content)
-            if number < len(sources):
+        for source in sources:
+            st.markdown(f"**[{source['number']}] {source['title']}**")
+            st.caption(f"{source['doc_id']} · Version {source['version']} · {source['section']}")
+            st.markdown(source["content"])
+            if source["number"] < len(sources):
                 st.divider()
 
 
@@ -94,45 +69,67 @@ def ask(question: str) -> None:
     st.session_state.pending = question
 
 
-# --- Sidebar: who is asking, and what may they see? ------------------------
-users = load_users(config.DATA_DIR)
+def sign_in(user_id: str, password: str) -> None:
+    token = client.login(user_id, password)
+    st.session_state.token = token
+    st.session_state.me = client.get("/me", token)
+    st.session_state.access = client.get("/access", token)
+    st.session_state.messages = []
+
+
+def sign_out(notice: str | None = None) -> None:
+    for key in ("token", "me", "access", "messages", "pending"):
+        st.session_state.pop(key, None)
+    if notice:
+        st.session_state.notice = notice
+
+
+# --- Sidebar: sign in, or who is signed in -----------------------------------
 with st.sidebar:
     st.markdown("### 🧭 PolicyPilot")
     st.caption("Internal knowledge assistant · Nordwerk Automotive")
 
-    st.markdown("**Signed in as**")
-    user = st.selectbox(
-        "Demo user",
-        users,
-        format_func=lambda u: f"{u.name} · {u.department}",
-        label_visibility="collapsed",
-    )
-    st.badge(user.role, icon=":material/badge:", color="blue")
+    if "token" not in st.session_state:
+        with st.form("sign-in"):
+            user = st.selectbox(
+                "Demo user",
+                load_users(config.DATA_DIR),
+                format_func=lambda u: f"{u.name} · {u.department}",
+            )
+            password = st.text_input("Password", type="password")
+            if st.form_submit_button("Sign in", width="stretch"):
+                try:
+                    sign_in(user.user_id, password)
+                    st.rerun()
+                except client.ApiError as error:
+                    st.error(str(error))
+        st.caption("Demo login. In production users sign in with the company SSO.")
+    else:
+        me = st.session_state.me
+        st.markdown(f"**{me['name']}**")
+        st.badge(me["role"], icon=":material/badge:", color="blue")
 
-    st.markdown("**Your document access**")
-    for department, count, confidential in access_summary(user.role):
-        note = f" · {confidential} confidential" if confidential else ""
-        plural = "s" if count != 1 else ""
-        st.markdown(f"- {department}: {count} document{plural}{note}")
+        st.markdown("**Your document access**")
+        for item in st.session_state.access:
+            note = f" · {item['confidential']} confidential" if item["confidential"] else ""
+            plural = "s" if item["documents"] != 1 else ""
+            name = DEPARTMENTS.get(item["department"], item["department"])
+            st.markdown(f"- {name}: {item['documents']} document{plural}{note}")
 
-    if st.button("New chat", icon=":material/add_comment:", width="stretch"):
-        st.session_state.messages = []
+        if st.button("New chat", icon=":material/add_comment:", width="stretch"):
+            st.session_state.messages = []
+        st.button("Sign out", icon=":material/logout:", width="stretch", on_click=sign_out)
 
-    st.divider()
-    st.caption(
-        "Demo: the user is chosen here. In production the role comes from the "
-        "company login (SSO), never from the chat."
-    )
-
-# A new user must never see the previous user's answers.
-if st.session_state.get("user_id") != user.user_id:
-    st.session_state.user_id = user.user_id
-    st.session_state.messages = []
-
-# --- Main area --------------------------------------------------------------
+# --- Main area ----------------------------------------------------------------
 st.title("PolicyPilot")
 st.caption("Answers only from internal documents you are allowed to see, always with sources.")
-warm_up()
+
+if notice := st.session_state.pop("notice", None):
+    st.warning(notice)
+
+if "token" not in st.session_state:
+    st.info("Please sign in on the left to ask questions.", icon=":material/login:")
+    st.stop()
 
 question = st.chat_input("Ask about HR, IT or quality policies ...")
 if not question:
@@ -141,7 +138,7 @@ if not question:
 if not st.session_state.messages and not question:
     st.markdown("##### Try a question")
     columns = st.columns(2)
-    for index, example in enumerate(EXAMPLES[user.role]):
+    for index, example in enumerate(EXAMPLES.get(st.session_state.me["role"], [])):
         columns[index % 2].button(
             example, key=f"example-{index}", on_click=ask, args=(example,), width="stretch"
         )
@@ -159,15 +156,23 @@ if question:
         st.markdown(question)
 
     with st.chat_message("assistant"):
-        with st.spinner("Searching the documents you may see ..."):
-            start = time.perf_counter()
-            result = answer(question, user.role)
-            seconds = time.perf_counter() - start
+        try:
+            with st.spinner("Searching the documents you may see ..."):
+                start = time.perf_counter()
+                result = client.ask(question, st.session_state.token)
+                seconds = time.perf_counter() - start
+        except client.NotSignedIn:
+            sign_out("Your session has expired. Please sign in again.")
+            st.rerun()
+        except client.ApiError as error:
+            st.error(str(error))
+            st.stop()
+
         message = {
             "role": "assistant",
-            "content": result.text,
-            "sources": result.sources,
-            "answered": result.answered,
+            "content": result["answer"],
+            "sources": result["sources"],
+            "answered": result["answered"],
             "seconds": seconds,
         }
         show_answer(message)
