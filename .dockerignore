@@ -1,0 +1,19 @@
+# Secrets: never inside an image
+.env
+.env.*
+!.env.example
+
+# Local Python environment and caches (built fresh inside the image)
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# Not needed to run the app
+.git/
+.github/
+.vscode/
+.DS_Store
+tests/
+*.log

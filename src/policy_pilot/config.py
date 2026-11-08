@@ -12,7 +12,7 @@ SCHEMA_FILE = Path(os.getenv("SCHEMA_FILE", "db/schema.sql"))
 
 # Multilingual retrieval model: strong on German and English, runs locally, MIT license.
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "BAAI/bge-m3")
-EEMBEDDING_DIM = 1024
+EMBEDDING_DIM = 1024
 
 LLM_MODEL = os.getenv("LLM_MODEL", "gpt-5.4-mini")
 LLM_REASONING_EFFORT = os.getenv("LLM_REASONING_EFFORT", "low")
