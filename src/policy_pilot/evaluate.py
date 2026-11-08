@@ -53,6 +53,7 @@ def save(rows: list[dict], path: Path) -> None:
         writer.writerows(rows)
     print(f"\nDetails saved to {path}")
 
+
 def evaluate_retrieval(cases: list[Case]) -> list[dict]:
     """Search quality and a threshold sweep. No LLM calls, so it is free and fast."""
     allowed = allowed_roles_by_doc()
@@ -83,8 +84,10 @@ def evaluate_retrieval(cases: list[Case]) -> list[dict]:
     for threshold in THRESHOLDS:
         passed = sum(r["top_similarity"] >= threshold for r in answerable)
         stopped = sum(r["top_similarity"] < threshold for r in refusals)
-        print(f"  {threshold:.2f}    | {passed:>2}/{len(answerable)}"
-              f"                         | {stopped:>2}/{len(refusals)}")
+        print(
+            f"  {threshold:.2f}    | {passed:>2}/{len(answerable)}"
+            f"                         | {stopped:>2}/{len(refusals)}"
+        )
 
     print("\nLowest similarity among answerable questions:")
     for r in sorted(answerable, key=lambda r: r["top_similarity"])[:5]:
@@ -92,7 +95,9 @@ def evaluate_retrieval(cases: list[Case]) -> list[dict]:
     print("Highest similarity among refusals:")
     for r in sorted(refusals, key=lambda r: r["top_similarity"], reverse=True)[:5]:
         print(f"  {r['top_similarity']:.3f}  {r['id']}")
-    return rows    
+    return rows
+
+
 def evaluate_answers(cases: list[Case]) -> list[dict]:
     """The full pipeline, as the user experiences it."""
     allowed = allowed_roles_by_doc()
@@ -141,6 +146,8 @@ def evaluate_answers(cases: list[Case]) -> list[dict]:
     print(f"Leaked documents:   {sum(r['leaked_docs'] for r in rows)}")
     print(f"Median time:        {seconds[len(seconds) // 2]:.1f} s")
     return rows
+
+
 def main() -> None:
     mode = sys.argv[1] if len(sys.argv) > 1 else "retrieval"
     cases = load_cases()

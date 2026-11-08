@@ -30,3 +30,20 @@ def db_params() -> dict:
         "user": os.environ["POSTGRES_USER"],
         "password": os.environ["POSTGRES_PASSWORD"],
     }
+
+
+JWT_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "60"))
+
+
+def jwt_secret() -> str:
+    """Key that signs login tokens. Required: there is no default on purpose."""
+    return os.environ["JWT_SECRET"]
+
+
+def demo_password() -> str:
+    """Shared password of the demo users. In production, users sign in via the company SSO."""
+    return os.environ["DEMO_PASSWORD"]
+
+
+# Where the chat UI finds the API.
+API_URL = os.getenv("API_URL", "http://localhost:8000")
