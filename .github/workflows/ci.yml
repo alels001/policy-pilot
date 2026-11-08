@@ -21,3 +21,59 @@ jobs:
 
       - name: Ruff format check
         run: uv run --only-dev ruff format --check src tests
+
+  test:
+    name: Tests (pytest + Postgres)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      db:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: policypilot
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: policypilot
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U policypilot -d policypilot"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: policypilot
+      POSTGRES_PASSWORD: ci-only-password
+      POSTGRES_DB: policypilot
+      JWT_SECRET: ci-only-not-a-real-secret
+      DEMO_PASSWORD: ci-only-demo-password
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Restore the embedding model from cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-${{ runner.os }}-bge-m3
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Enable pgvector
+        run: docker exec ${{ job.services.db.id }} psql -U policypilot -d policypilot -c "CREATE EXTENSION IF NOT EXISTS vector;"
+
+      - name: Index the synthetic documents
+        run: uv run python -m policy_pilot.ingest
+
+      - name: Run tests
+        run: uv run pytest -q
