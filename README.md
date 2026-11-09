@@ -1,5 +1,8 @@
 # 🧭 PolicyPilot — Role-aware RAG for Internal Knowledge
 
+[![CI](https://github.com/alels001/policy-pilot/actions/workflows/ci.yml/badge.svg)](https://github.com/alels001/policy-pilot/actions/workflows/ci.yml)
+[![Docker image](https://github.com/alels001/policy-pilot/actions/workflows/docker.yml/badge.svg)](https://github.com/alels001/policy-pilot/actions/workflows/docker.yml)
+
 A small, local-first **retrieval-augmented generation (RAG)** project for answering employees' questions from internal HR, IT, compliance, and quality documents. Answers are grounded in retrieved passages and show their sources.
 
 > **Portfolio/demo project.** Nordwerk Automotive GmbH is a fictional company, and the sample documents and users are synthetic. Users sign in through the API with a shared **demo password**; the role always comes from a signed JWT. A real rollout would use the company SSO.
