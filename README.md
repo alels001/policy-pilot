@@ -16,6 +16,7 @@ A small, local-first **retrieval-augmented generation (RAG)** project for answer
 - **REST API with login:** FastAPI with JWT tokens. The role is taken only from the token, never from the client.
 - **Thin UI:** Streamlit chat that talks only to the API and never decides roles itself.
 - **Containers:** one Docker image for API and UI, started together with the database by Docker Compose.
+- **CI/CD:** GitHub Actions runs ruff and 53 tests against a real PostgreSQL/pgvector database on every pull request, and builds the Docker image; on `main` it publishes the image to GitHub Container Registry.
 - **Evaluation:** a labelled question set covering answerable, restricted, cross-lingual, and out-of-scope questions.
 
 ## Architecture
@@ -156,13 +157,14 @@ tests/                catalog, chunking, access-control and API tests
 docs/                 requirements and design decisions
 Dockerfile            one image for API and UI
 docker-compose.yml    database, API and UI
+.github/workflows/    CI (lint + tests) and Docker image build
 ```
 
 ## Limitations and next steps
 
 This is a **local pilot**, not an enterprise deployment. The demo users share one password, which is fine for a demo but not for real use. A real rollout would require SSO with trusted role mapping, secret management, operations monitoring, and a security review. The synthetic corpus is intentionally small; results should not be generalized to an organization's document collection.
 
-Next steps: CI/CD with GitHub Actions, deployment to AWS, and tracing of answers and costs.
+Next steps: conversation memory for follow-up questions (agent with LangGraph), deployment to AWS, and tracing of answers and costs.
 
 Read more in the [product requirements](docs/PRD.md).
 
