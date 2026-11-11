@@ -126,3 +126,40 @@ def test_access_shows_confidential_hr_documents_for_hr(client):
     response = client.get("/access", headers=auth_header(client, "u-jonas"))
     hr = next(item for item in response.json() if item["department"] == "hr")
     assert hr["confidential"] == 1
+
+
+@pytest.fixture
+def threads_asked(monkeypatch):
+    """Replace the memory agent with a fake that records the role and the thread."""
+    calls = []
+
+    def fake_ask(question: str, role: str, thread_id: str) -> Answer:
+        calls.append((role, thread_id))
+        return Answer(text=f"answer for {role}", sources=[], answered=True)
+
+    monkeypatch.setattr(api.agent, "ask", fake_ask)
+    return calls
+
+
+def test_ask_with_a_conversation_uses_one_thread_per_user(client, roles_asked, threads_asked):
+    body = {"question": "And for a Junior?", "conversation_id": "chat-1"}
+    for user_id in ("u-jonas", "u-anna"):
+        response = client.post("/ask", json=body, headers=auth_header(client, user_id))
+        assert response.status_code == 200
+
+    assert threads_asked == [
+        ("hr_specialist", "u-jonas:chat-1"),
+        ("employee", "u-anna:chat-1"),
+    ]
+    assert roles_asked == []
+
+
+@pytest.mark.parametrize("conversation_id", ["", "u-jonas:chat-1", "../chat", "x" * 65])
+def test_ask_rejects_an_invalid_conversation_id(client, threads_asked, conversation_id):
+    response = client.post(
+        "/ask",
+        json={"question": "And for a Junior?", "conversation_id": conversation_id},
+        headers=auth_header(client, "u-anna"),
+    )
+    assert response.status_code == 422
+    assert threads_asked == []
