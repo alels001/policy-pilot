@@ -5,6 +5,7 @@ Run from the project root, with the API running:
 """
 
 import time
+import uuid
 
 import streamlit as st
 
@@ -75,10 +76,10 @@ def sign_in(user_id: str, password: str) -> None:
     st.session_state.me = client.get("/me", token)
     st.session_state.access = client.get("/access", token)
     st.session_state.messages = []
-
+    st.session_state.conversation_id = uuid.uuid4().hex
 
 def sign_out(notice: str | None = None) -> None:
-    for key in ("token", "me", "access", "messages", "pending"):
+    for key in ("token", "me", "access", "messages", "pending", "conversation_id"):
         st.session_state.pop(key, None)
     if notice:
         st.session_state.notice = notice
@@ -118,6 +119,7 @@ with st.sidebar:
 
         if st.button("New chat", icon=":material/add_comment:", width="stretch"):
             st.session_state.messages = []
+            st.session_state.conversation_id = uuid.uuid4().hex
         st.button("Sign out", icon=":material/logout:", width="stretch", on_click=sign_out)
 
 # --- Main area ----------------------------------------------------------------
@@ -159,7 +161,11 @@ if question:
         try:
             with st.spinner("Searching the documents you may see ..."):
                 start = time.perf_counter()
-                result = client.ask(question, st.session_state.token)
+                result = client.ask(
+                    question,
+                    st.session_state.token,
+                    st.session_state.get("conversation_id"),
+                )
                 seconds = time.perf_counter() - start
         except client.NotSignedIn:
             sign_out("Your session has expired. Please sign in again.")
