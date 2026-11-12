@@ -78,6 +78,7 @@ def sign_in(user_id: str, password: str) -> None:
     st.session_state.messages = []
     st.session_state.conversation_id = uuid.uuid4().hex
 
+
 def sign_out(notice: str | None = None) -> None:
     for key in ("token", "me", "access", "messages", "pending", "conversation_id"):
         st.session_state.pop(key, None)
