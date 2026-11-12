@@ -11,7 +11,7 @@ from typing import Annotated
 from fastapi import Depends, FastAPI, HTTPException, status
 from pydantic import BaseModel, ConfigDict, Field
 
-from policy_pilot import config
+from policy_pilot import agent, config
 from policy_pilot.auth import CurrentUser, authenticate, create_token, current_user
 from policy_pilot.catalog import current_documents, load_catalog
 from policy_pilot.db import connect
@@ -43,6 +43,9 @@ class AskRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")  # e.g. a "role" field is rejected, not ignored
 
     question: str = Field(min_length=1, max_length=1000)
+    conversation_id: str | None = Field(
+        default=None, min_length=1, max_length=64, pattern=r"^[A-Za-z0-9_-]+$"
+    )
 
 
 class Source(BaseModel):
@@ -114,7 +117,11 @@ def access(user: Annotated[CurrentUser, Depends(current_user)]) -> list[Departme
 @app.post("/ask")
 def ask(request: AskRequest, user: Annotated[CurrentUser, Depends(current_user)]) -> AskResponse:
     """Answer a question for the signed-in user. The role comes from the token."""
-    result = answer(request.question, user.role)
+    if request.conversation_id:
+        thread_id = f"{user.user_id}:{request.conversation_id}"
+        result = agent.ask(request.question, user.role, thread_id)
+    else:
+        result = answer(request.question, user.role)
     sources = [
         Source(
             number=number,

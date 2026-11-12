@@ -39,5 +39,8 @@ def get(path: str, token: str):
     return _request("GET", path, token=token)
 
 
-def ask(question: str, token: str) -> dict:
-    return _request("POST", "/ask", token=token, json={"question": question})
+def ask(question: str, token: str, conversation_id: str | None = None) -> dict:
+    body = {"question": question}
+    if conversation_id:
+        body["conversation_id"] = conversation_id
+    return _request("POST", "/ask", token=token, json=body)
